@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SecureCNYT 控制面板 v1.1.0</title>
+  <title>SecureCNYT 控制面板 v1.2.0</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     :root {
@@ -26,120 +26,35 @@
       justify-content: center;
       padding: 2rem 1rem;
     }
-    .container {
-      max-width: 1100px;
-      width: 100%;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-    }
-    .header h1 {
-      font-size: 1.8rem;
-      margin: 0;
-    }
-    .version-badge {
-      background: var(--accent);
-      color: white;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: bold;
-    }
-    .subtitle {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    .input-group {
-      display: flex;
-      flex-direction: column;
-    }
-    label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 0.25rem;
-    }
+    .container { max-width: 1100px; width: 100%; }
+    .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .header h1 { font-size: 1.8rem; margin: 0; }
+    .version-badge { background: var(--accent); color: white; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+    .subtitle { color: var(--text-secondary); margin-bottom: 2rem; }
+    .row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+    .input-group { display: flex; flex-direction: column; }
+    label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.25rem; }
     input, button, select {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      background: var(--card-bg); border: 1px solid var(--border);
+      color: var(--text); padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem;
     }
-    button {
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 500;
-    }
-    button:hover {
-      border-color: var(--accent);
-      background: #1e293bcc;
-    }
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+    button { cursor: pointer; transition: all 0.2s; font-weight: 500; }
+    button:hover { border-color: var(--accent); background: #1e293bcc; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
     .btn-danger { border-color: var(--danger); color: var(--danger); }
     .btn-success { border-color: var(--success); color: var(--success); }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .card h2 {
-      margin: 0 0 1rem;
-      font-size: 1.2rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-    }
-    .flex-col {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-    .info {
-      display: flex;
-      justify-content: space-between;
-    }
-    .info span:first-child {
-      color: var(--text-secondary);
-    }
-    .status-badge {
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    .hidden {
-      display: none;
-    }
-    .error {
-      color: var(--danger);
-      font-size: 0.85rem;
-    }
-    .hint {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .card h2 { margin: 0 0 1rem; font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    .flex-col { display: flex; flex-direction: column; gap: 0.8rem; }
+    .info { display: flex; justify-content: space-between; }
+    .info span:first-child { color: var(--text-secondary); }
+    .status-badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+    .hidden { display: none; }
+    .error { color: var(--danger); font-size: 0.85rem; }
+    .hint { font-size: 0.8rem; color: var(--text-secondary); }
+    .pair-result { background: #0f172a; padding: 0.8rem; border-radius: 8px; word-break: break-all; font-family: monospace; }
   </style>
 </head>
 <body>
@@ -161,7 +76,6 @@
       <input type="text" id="contract-address" placeholder="0x..." style="width: 320px;" />
     </div>
     <button id="btn-load-contract" class="btn-primary">加载合约</button>
-    <button id="btn-save-contract" style="display:none;">💾 已自动保存</button>
   </div>
 
   <div id="app-content" class="hidden">
@@ -185,7 +99,7 @@
         </div>
       </div>
 
-      <!-- 充值确认铸币（仅管理员/铸币者可见） -->
+      <!-- 充值确认铸币 -->
       <div id="deposit-mint-card" class="card hidden">
         <h2>🏧 充值确认铸币</h2>
         <div class="flex-col">
@@ -339,6 +253,38 @@
           </div>
         </div>
       </div>
+
+      <!-- 交易对地址计算 (PancakeSwap) -->
+      <div class="card">
+        <h2>🥞 PancakeSwap 交易对地址计算</h2>
+        <div class="flex-col">
+          <p class="hint">输入另一个代币地址，计算与当前 CNYT 代币组成的 PancakeSwap Pair 地址</p>
+          <div class="flex-col">
+            <label>目标代币地址</label>
+            <input type="text" id="pair-token-address" placeholder="0x..." />
+          </div>
+          <div class="flex-col">
+            <label>预设链 / 交易所</label>
+            <select id="pair-factory-preset">
+              <option value="bsc_mainnet" selected>BSC 主网 (PancakeSwap V2)</option>
+              <option value="bsc_testnet">BSC 测试网</option>
+              <option value="ethereum">以太坊主网 (Uniswap V2)</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div id="custom-factory-section" class="flex-col hidden">
+            <label>工厂合约地址</label>
+            <input type="text" id="pair-factory-address" placeholder="0x..." />
+            <label>Init Code Hash</label>
+            <input type="text" id="pair-init-code-hash" placeholder="0x..." />
+          </div>
+          <button id="btn-calc-pair">计算交易对地址</button>
+          <div id="pair-result-section" class="pair-result hidden">
+            <strong>Pair 地址：</strong><span id="pair-result"></span>
+            <button id="btn-copy-pair" class="btn-primary" style="margin-top:0.5rem; width:100%;">复制地址</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="tx-status" class="row" style="margin-top:1rem;"></div>
@@ -347,7 +293,7 @@
 
 <script>
   (function() {
-    const APP_VERSION = "1.1.0";
+    const APP_VERSION = "1.2.0";
     document.getElementById('app-version').textContent = `v${APP_VERSION}`;
 
     // ---------- ABI ----------
@@ -392,8 +338,9 @@
 
     let provider, signer, contract;
     let userAddress;
+    let currentNetworkName = '';
 
-    // DOM 元素
+    // DOM elements
     const btnConnect = document.getElementById('btn-connect');
     const walletAddr = document.getElementById('wallet-address');
     const contractAddrInput = document.getElementById('contract-address');
@@ -403,6 +350,7 @@
     const pauseBadge = document.getElementById('pause-badge');
     const txStatus = document.getElementById('tx-status');
 
+    // Info display
     const tokenName = document.getElementById('token-name');
     const tokenSymbol = document.getElementById('token-symbol');
     const userBalance = document.getElementById('user-balance');
@@ -412,6 +360,7 @@
     const totalSupplyEl = document.getElementById('total-supply');
     const contractBalance = document.getElementById('contract-balance');
 
+    // Cards visibility
     const depositMintCard = document.getElementById('deposit-mint-card');
     const mintCard = document.getElementById('mint-card');
     const adminCard = document.getElementById('admin-card');
@@ -420,32 +369,18 @@
     const rescueCard = document.getElementById('rescue-card');
     const roleCard = document.getElementById('role-card');
 
-    // 合约地址本地存储
+    // Contract address storage
     const STORAGE_KEY = 'securecnyt_contract_addr';
-
-    function saveContractAddress(addr) {
-      localStorage.setItem(STORAGE_KEY, addr);
-    }
-
+    function saveContractAddress(addr) { localStorage.setItem(STORAGE_KEY, addr); }
     function loadSavedContract() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved && ethers.utils.isAddress(saved)) {
         contractAddrInput.value = saved;
       }
     }
-
-    // 页面加载时恢复地址
     loadSavedContract();
 
-    // 自动保存（在输入框失去焦点时保存，但更好的做法是加载合约时保存）
-    contractAddrInput.addEventListener('blur', () => {
-      const addr = contractAddrInput.value.trim();
-      if (ethers.utils.isAddress(addr)) {
-        saveContractAddress(addr);
-      }
-    });
-
-    // 按钮事件
+    // Button events
     btnConnect.onclick = connectWallet;
     btnLoadContract.onclick = loadContract;
 
@@ -467,12 +402,93 @@
     document.getElementById('btn-grant-role').onclick = grantRole;
     document.getElementById('btn-revoke-role').onclick = revokeRole;
 
-    // ---------- 钱包连接 ----------
-    async function connectWallet() {
-      if (!window.ethereum) {
-        alert('请安装 MetaMask');
+    // Pair address calculator elements
+    const pairTokenAddress = document.getElementById('pair-token-address');
+    const pairFactoryPreset = document.getElementById('pair-factory-preset');
+    const customFactorySection = document.getElementById('custom-factory-section');
+    const pairFactoryAddress = document.getElementById('pair-factory-address');
+    const pairInitCodeHash = document.getElementById('pair-init-code-hash');
+    const btnCalcPair = document.getElementById('btn-calc-pair');
+    const pairResultSection = document.getElementById('pair-result-section');
+    const pairResultSpan = document.getElementById('pair-result');
+    const btnCopyPair = document.getElementById('btn-copy-pair');
+
+    // Show/hide custom factory fields
+    pairFactoryPreset.addEventListener('change', () => {
+      if (pairFactoryPreset.value === 'custom') {
+        customFactorySection.classList.remove('hidden');
+      } else {
+        customFactorySection.classList.add('hidden');
+      }
+    });
+
+    btnCalcPair.onclick = calculatePairAddress;
+    btnCopyPair.onclick = () => {
+      const addr = pairResultSpan.textContent;
+      if (addr) {
+        navigator.clipboard.writeText(addr).then(() => alert('已复制'));
+      }
+    };
+
+    function calculatePairAddress() {
+      if (!contract) {
+        alert('请先加载合约，以便获取 CNYT 代币地址');
         return;
       }
+      const otherToken = pairTokenAddress.value.trim();
+      if (!ethers.utils.isAddress(otherToken)) {
+        alert('请输入有效的目标代币地址');
+        return;
+      }
+      const tokenA = contract.address;
+      const tokenB = otherToken;
+
+      // Get factory and init code hash based on preset
+      let factory, initCodeHash;
+      const preset = pairFactoryPreset.value;
+      if (preset === 'bsc_mainnet') {
+        factory = '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73';
+        initCodeHash = '0x00fb7f630766e6a796048ea87d01acd3068e8ff67d078148a3fa3f4a84f69bd5';
+      } else if (preset === 'bsc_testnet') {
+        factory = '0x6725F303b657a9451d8BA641348b6761A6CC7a17'; // BSC testnet factory (common)
+        initCodeHash = '0xd0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66'; // check if correct
+      } else if (preset === 'ethereum') {
+        factory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'; // Uniswap V2
+        initCodeHash = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f';
+      } else if (preset === 'custom') {
+        factory = pairFactoryAddress.value.trim();
+        initCodeHash = pairInitCodeHash.value.trim();
+        if (!ethers.utils.isAddress(factory) || !ethers.utils.isHexString(initCodeHash, 32)) {
+          alert('请输入有效的工厂地址和32字节的init code hash');
+          return;
+        }
+      } else {
+        alert('未知预设');
+        return;
+      }
+
+      // Sort tokens
+      const [token0, token1] = tokenA.toLowerCase() < tokenB.toLowerCase() ? [tokenA, tokenB] : [tokenB, tokenA];
+
+      // Compute salt
+      const salt = ethers.utils.keccak256(
+        ethers.utils.solidityPack(['address', 'address'], [token0, token1])
+      );
+
+      // Compute pair address using CREATE2 formula
+      const pairAddress = ethers.utils.getCreate2Address(
+        factory,
+        salt,
+        initCodeHash
+      );
+
+      pairResultSpan.textContent = pairAddress;
+      pairResultSection.classList.remove('hidden');
+    }
+
+    // ---------- Wallet connection ----------
+    async function connectWallet() {
+      if (!window.ethereum) { alert('请安装 MetaMask'); return; }
       try {
         const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
         userAddress = accounts[0];
@@ -480,35 +496,26 @@
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
         const network = await provider.getNetwork();
-        const netName = network.name === 'homestead' ? 'Ethereum' : (network.name || `Chain ID ${network.chainId}`);
-        networkBadge.textContent = `🌐 ${netName}`;
+        currentNetworkName = network.name === 'homestead' ? 'Ethereum' : (network.name || `Chain ID ${network.chainId}`);
+        networkBadge.textContent = `🌐 ${currentNetworkName}`;
         btnConnect.disabled = true;
         btnConnect.textContent = '已连接';
         if (contract) await refreshAll();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     }
 
-    // ---------- 加载合约 ----------
+    // ---------- Load contract ----------
     async function loadContract() {
       const addr = contractAddrInput.value.trim();
-      if (!ethers.utils.isAddress(addr)) {
-        alert('请输入有效的合约地址');
-        return;
-      }
-      if (!signer) {
-        alert('请先连接钱包');
-        return;
-      }
+      if (!ethers.utils.isAddress(addr)) { alert('请输入有效的合约地址'); return; }
+      if (!signer) { alert('请先连接钱包'); return; }
       contract = new ethers.Contract(addr, abi, signer);
       appContent.classList.remove('hidden');
-      // 保存地址
       saveContractAddress(addr);
       await refreshAll();
     }
 
-    // ---------- 刷新数据 ----------
+    // ---------- Refresh data ----------
     async function refreshAll() {
       if (!contract) return;
       try {
@@ -516,15 +523,10 @@
           name, symbol, decimals, balance, mfp, rfp, collector,
           paused, conBal, totalSup
         ] = await Promise.all([
-          contract.name(),
-          contract.symbol(),
-          contract.decimals(),
-          contract.balanceOf(userAddress),
-          contract.mintFeePercent(),
-          contract.redeemFeePercent(),
-          contract.feeCollector(),
-          contract.paused(),
-          contract.balanceOf(contract.address),
+          contract.name(), contract.symbol(), contract.decimals(),
+          contract.balanceOf(userAddress), contract.mintFeePercent(),
+          contract.redeemFeePercent(), contract.feeCollector(),
+          contract.paused(), contract.balanceOf(contract.address),
           contract.totalSupply()
         ]);
 
@@ -557,8 +559,7 @@
           contract.hasRole(FORCE_BURNER, userAddress)
         ]);
 
-        // 显示/隐藏卡片
-        depositMintCard.classList.toggle('hidden', !isMinter);      // 充值确认也属于铸币者
+        depositMintCard.classList.toggle('hidden', !isMinter);
         mintCard.classList.toggle('hidden', !isMinter);
         adminCard.classList.toggle('hidden', !(isAdmin || isPauser || isBlacklistMgr || isForceBurner));
         feeLimitCard.classList.toggle('hidden', !(isAdmin || isFeeSetter));
@@ -603,17 +604,15 @@
       }
     }
 
-    // ---------- 充值确认铸币 ----------
+    // ---------- Operations ----------
     function executeDepositMint() {
       const to = document.getElementById('deposit-user').value.trim();
       const totalRaw = document.getElementById('deposit-total').value.trim();
       if (!ethers.utils.isAddress(to)) return alert('用户地址无效');
       if (!totalRaw || isNaN(parseFloat(totalRaw)) || parseFloat(totalRaw) <= 0) return alert('金额必须 > 0');
       const amount = ethers.utils.parseUnits(totalRaw, 18);
-      executeTx(contract.mintWithFee(to, amount), `充值确认完成，已为 ${to.slice(0,6)}... 铸造代币`);
+      executeTx(contract.mintWithFee(to, amount), `充值确认完成，已铸造`);
     }
-
-    // ---------- 普通增发 ----------
     function executeMint() {
       const to = document.getElementById('mint-to').value.trim();
       const totalRaw = document.getElementById('mint-total').value.trim();
@@ -622,30 +621,23 @@
       const amount = ethers.utils.parseUnits(totalRaw, 18);
       executeTx(contract.mintWithFee(to, amount), '铸币成功');
     }
-
     function executeRedeem() {
       const amountRaw = document.getElementById('redeem-amount').value.trim();
       if (!amountRaw || isNaN(parseFloat(amountRaw)) || parseFloat(amountRaw) <= 0) return alert('金额必须 > 0');
       const amount = ethers.utils.parseUnits(amountRaw, 18);
-      executeTx(contract.redeem(amount), '赎回已提交（链下处理）');
+      executeTx(contract.redeem(amount), '赎回已提交');
     }
-
-    function setPause(pause) {
-      executeTx(contract.setPause(pause), pause ? '已暂停' : '已恢复');
-    }
-
+    function setPause(pause) { executeTx(contract.setPause(pause), pause ? '已暂停' : '已恢复'); }
     function updateBlacklist(status) {
       const addr = document.getElementById('blacklist-addr').value.trim();
       if (!ethers.utils.isAddress(addr)) return alert('地址无效');
       executeTx(contract.setBlacklist([addr], status), status ? '已加入黑名单' : '已移出黑名单');
     }
-
     function updateWhitelist(status) {
       const addr = document.getElementById('whitelist-addr').value.trim();
       if (!ethers.utils.isAddress(addr)) return alert('地址无效');
       executeTx(contract.setWhiteList(addr, status), status ? '已加入白名单' : '已移出白名单');
     }
-
     function executeForceBurn() {
       const addr = document.getElementById('force-burn-addr').value.trim();
       const amountRaw = document.getElementById('force-burn-amount').value.trim();
@@ -654,36 +646,30 @@
       const amount = ethers.utils.parseUnits(amountRaw, 18);
       executeTx(contract.forceBurn(addr, amount), '强制销毁完成');
     }
-
     function setFeeParams() {
       const mFeeRaw = document.getElementById('mint-fee-input').value.trim();
       const rFeeRaw = document.getElementById('redeem-fee-input').value.trim();
       const collector = document.getElementById('fee-collector-input').value.trim();
-      if (!mFeeRaw || !rFeeRaw || !collector) return alert('请完整填写费率与地址');
+      if (!mFeeRaw || !rFeeRaw || !collector) return alert('请完整填写');
       const mFee = parseInt(mFeeRaw, 10);
       const rFee = parseInt(rFeeRaw, 10);
-      if (isNaN(mFee) || isNaN(rFee) || mFee < 0 || mFee > 1000 || rFee < 0 || rFee > 1000)
-        return alert('费率需为 0~1000 的整数');
+      if (isNaN(mFee) || isNaN(rFee) || mFee < 0 || mFee > 1000 || rFee < 0 || rFee > 1000) return alert('费率 0-1000');
       if (!ethers.utils.isAddress(collector)) return alert('收益地址无效');
       executeTx(contract.setFeeParams(mFee, rFee, collector), '费率已更新');
     }
-
     function setMintLimits() {
       const txL = document.getElementById('mint-limit-tx').value.trim() || '0';
       const dayL = document.getElementById('mint-limit-day').value.trim() || '0';
       if (isNaN(parseInt(txL)) || isNaN(parseInt(dayL))) return alert('限额必须为整数');
       executeTx(contract.setMintLimits(txL, dayL), '铸币限额已更新');
     }
-
     function setTransferLimits() {
       const cd = document.getElementById('transfer-cooldown').value.trim() || '0';
       const txL = document.getElementById('transfer-limit-tx').value.trim() || '0';
       const dayL = document.getElementById('transfer-limit-day').value.trim() || '0';
-      if (isNaN(parseInt(cd)) || isNaN(parseInt(txL)) || isNaN(parseInt(dayL)))
-        return alert('冷却与限额必须为整数');
+      if (isNaN(parseInt(cd)) || isNaN(parseInt(txL)) || isNaN(parseInt(dayL))) return alert('冷却与限额必须为整数');
       executeTx(contract.setTransferLimits(cd, txL, dayL), '转账限额已更新');
     }
-
     function withdrawProfit() {
       const to = document.getElementById('withdraw-to').value.trim();
       const amountRaw = document.getElementById('withdraw-amount').value.trim();
@@ -692,7 +678,6 @@
       const amount = ethers.utils.parseUnits(amountRaw, 18);
       executeTx(contract.withdrawProfit(to, amount), '收益提取成功');
     }
-
     function rescueToken() {
       const token = document.getElementById('rescue-token').value.trim();
       const to = document.getElementById('rescue-to').value.trim();
@@ -702,7 +687,6 @@
       const tokenAddr = token === '' ? ethers.constants.AddressZero : token;
       executeTx(contract.rescueToken(tokenAddr, to, amountRaw), '救援成功');
     }
-
     function grantRole() {
       const roleName = document.getElementById('role-select').value;
       const account = document.getElementById('role-account').value.trim();
@@ -710,7 +694,6 @@
       const roleHash = ethers.utils.id(roleName);
       executeTx(contract.grantRole(roleHash, account), `已授予 ${roleName}`);
     }
-
     function revokeRole() {
       const roleName = document.getElementById('role-select').value;
       const account = document.getElementById('role-account').value.trim();
@@ -719,7 +702,7 @@
       executeTx(contract.revokeRole(roleHash, account), `已撤销 ${roleName}`);
     }
 
-    // 监听钱包事件
+    // Event listeners
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length === 0) {
