@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureCNYT 控制面板</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --accent: #3b82f6;
+      --border: #334155;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 960px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    input, button, select {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    button {
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    button:hover {
+      border-color: var(--accent);
+      background: #1e293bcc;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn-danger { border-color: var(--danger); color: var(--danger); }
+    .btn-success { border-color: var(--success); color: var(--success); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .card h2 {
+      margin: 0 0 1rem;
+      font-size: 1.2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    .flex-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .info {
+      display: flex;
+      justify-content: space-between;
+    }
+    .info span:first-child {
+      color: var(--text-secondary);
+    }
+    .status-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .hidden {
+      display: none;
+    }
+    #connect-wallet {
+      margin-bottom: 1.5rem;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🏦 SecureCNYT 控制面板</h1>
+  <p class="subtitle">链上 CNYT 代币管理 · 连接钱包后可操作对应角色功能</p>
+
+  <div id="connect-wallet" class="row">
+    <button id="btn-connect" class="btn-primary">连接 MetaMask</button>
+    <span id="wallet-address" style="color: var(--text-secondary);"></span>
+  </div>
+
+  <div class="row">
+    <div class="input-group">
+      <label for="contract-address">合约地址</label>
+      <input type="text" id="contract-address" placeholder="0x..." style="width: 320px;" />
+    </div>
+    <button id="btn-load-contract" class="btn-primary">加载合约</button>
+  </div>
+
+  <div id="app-content" class="hidden">
+    <div class="row" style="margin-top:1rem;">
+      <span class="status-badge" id="network-badge"></span>
+      <span class="status-badge" id="pause-badge"></span>
+    </div>
+
+    <div class="grid">
+      <!-- 基本信息 -->
+      <div class="card">
+        <h2>📋 代币信息</h2>
+        <div class="flex-col">
+          <div class="info"><span>名称</span><span id="token-name">--</span></div>
+          <div class="info"><span>符号</span><span id="token-symbol">--</span></div>
+          <div class="info"><span>你的余额</span><span id="user-balance">--</span></div>
+          <div class="info"><span>手续费入金</span><span id="mint-fee-pct">--</span></div>
+          <div class="info"><span>手续费出金</span><span id="redeem-fee-pct">--</span></div>
+          <div class="info"><span>收益地址</span><span id="fee-collector">--</span></div>
+        </div>
+      </div>
+
+      <!-- 增发（仅铸币者） -->
+      <div id="mint-card" class="card hidden">
+        <h2>💰 增发（带手续费）</h2>
+        <div class="flex-col">
+          <input type="text" id="mint-to" placeholder="目标地址" />
+          <input type="number" id="mint-total" placeholder="总金额（含手续费）" min="1" step="any" />
+          <button id="btn-mint">执行铸币</button>
+        </div>
+      </div>
+
+      <!-- 赎回（公开） -->
+      <div class="card">
+        <h2>📤 用户赎回</h2>
+        <div class="flex-col">
+          <input type="number" id="redeem-amount" placeholder="赎回数量" min="1" step="any" />
+          <button id="btn-redeem">赎回</button>
+          <span id="redeem-fee-hint" style="font-size:0.8rem; color: var(--text-secondary);"></span>
+        </div>
+      </div>
+
+      <!-- 管理员卡片（仅DEFAULT_ADMIN/FEE_SETTER/PAUSER等） -->
+      <div id="admin-card" class="card hidden">
+        <h2>⚙️ 管理员控制</h2>
+        <div class="flex-col">
+          <div class="flex-col">
+            <label>暂停转账</label>
+            <div style="display:flex; gap:0.5rem;">
+              <button id="btn-pause">暂停</button>
+              <button id="btn-unpause">恢复</button>
+            </div>
+          </div>
+          <div class="flex-col">
+            <label>黑名单管理</label>
+            <input type="text" id="blacklist-addr" placeholder="地址" />
+            <div style="display:flex; gap:0.5rem;">
+              <button id="btn-blacklist-add" class="btn-danger">加入</button>
+              <button id="btn-blacklist-remove" class="btn-success">移出</button>
+            </div>
+          </div>
+          <div class="flex-col">
+            <label>合约白名单</label>
+            <input type="text" id="whitelist-addr" placeholder="合约地址" />
+            <div style="display:flex; gap:0.5rem;">
+              <button id="btn-whitelist-add">加入</button>
+              <button id="btn-whitelist-remove" class="btn-danger">移出</button>
+            </div>
+          </div>
+          <div class="flex-col">
+            <label>强制销毁</label>
+            <input type="text" id="force-burn-addr" placeholder="目标地址" />
+            <input type="number" id="force-burn-amount" placeholder="数量" min="1" step="any" />
+            <button id="btn-force-burn" class="btn-danger">执行销毁</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 费率与限额设置 -->
+      <div id="fee-limit-card" class="card hidden">
+        <h2>🔧 费率与限额</h2>
+        <div class="flex-col">
+          <div class="flex-col">
+            <label>入金费率（基点）</label>
+            <input type="number" id="mint-fee-input" placeholder="例如 50 表示 0.5%" />
+          </div>
+          <div class="flex-col">
+            <label>出金费率（基点）</label>
+            <input type="number" id="redeem-fee-input" placeholder="例如 30" />
+          </div>
+          <div class="flex-col">
+            <label>收益地址</label>
+            <input type="text" id="fee-collector-input" placeholder="0x..." />
+          </div>
+          <button id="btn-set-fees">更新费率</button>
+
+          <div class="flex-col" style="margin-top:1rem;">
+            <label>铸币限额（每笔）</label>
+            <input type="number" id="mint-limit-tx" placeholder="0 = 无限制" />
+          </div>
+          <div class="flex-col">
+            <label>铸币限额（每日）</label>
+            <input type="number" id="mint-limit-day" placeholder="0 = 无限制" />
+          </div>
+          <button id="btn-set-mint-limits">更新铸币限额</button>
+
+          <div class="flex-col" style="margin-top:1rem;">
+            <label>转账冷却（秒）</label>
+            <input type="number" id="transfer-cooldown" placeholder="0 = 关闭" />
+          </div>
+          <div class="flex-col">
+            <label>转账每笔上限</label>
+            <input type="number" id="transfer-limit-tx" placeholder="0 = 无限制" />
+          </div>
+          <div class="flex-col">
+            <label>转账每日上限</label>
+            <input type="number" id="transfer-limit-day" placeholder="0 = 无限制" />
+          </div>
+          <button id="btn-set-transfer-limits">更新转账限额</button>
+        </div>
+      </div>
+
+      <!-- 收益提取 -->
+      <div id="profit-card" class="card hidden">
+        <h2>💸 提取收益</h2>
+        <div class="flex-col">
+          <div class="info"><span>合约中代币</span><span id="contract-balance">--</span></div>
+          <input type="text" id="withdraw-to" placeholder="接收地址" />
+          <input type="number" id="withdraw-amount" placeholder="数量" step="any" />
+          <button id="btn-withdraw">提取</button>
+        </div>
+      </div>
+
+      <!-- 紧急救援 -->
+      <div id="rescue-card" class="card hidden">
+        <h2>🚨 紧急救援</h2>
+        <div class="flex-col">
+          <input type="text" id="rescue-token" placeholder="代币地址 (空为ETH)" />
+          <input type="text" id="rescue-to" placeholder="接收地址" />
+          <input type="number" id="rescue-amount" placeholder="数量 (wei单位)" step="any" />
+          <button id="btn-rescue" class="btn-danger">执行救援</button>
+        </div>
+      </div>
+    </div>
+    <div id="tx-status" class="row" style="margin-top:1rem;"></div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- ABI 片段 ----------
+    const abi = [
+      "function name() view returns (string)",
+      "function symbol() view returns (string)",
+      "function decimals() view returns (uint8)",
+      "function balanceOf(address) view returns (uint256)",
+      "function mintFeePercent() view returns (uint256)",
+      "function redeemFeePercent() view returns (uint256)",
+      "function feeCollector() view returns (address)",
+      "function paused() view returns (bool)",
+      "function isBlacklisted(address) view returns (bool)",
+      "function _allWhiteList(address) view returns (bool)",
+      "function maxMintPerTx() view returns (uint256)",
+      "function maxMintPerDay() view returns (uint256)",
+      "function transferCooldown() view returns (uint256)",
+      "function maxTransferPerTx() view returns (uint256)",
+      "function maxTransferPerDay() view returns (uint256)",
+      "function hasRole(bytes32, address) view returns (bool)",
+      "function DEFAULT_ADMIN_ROLE() view returns (bytes32)",
+      "function MINTER_ROLE() view returns (bytes32)",
+      "function PAUSER_ROLE() view returns (bytes32)",
+      "function FEE_SETTER_ROLE() view returns (bytes32)",
+      "function BLACKLIST_MANAGER_ROLE() view returns (bytes32)",
+      "function FORCE_BURNER_ROLE() view returns (bytes32)",
+      "function mintWithFee(address, uint256)",
+      "function redeem(uint256)",
+      "function setPause(bool)",
+      "function setBlacklist(address[], bool)",
+      "function setWhiteList(address, bool)",
+      "function setFeeParams(uint256, uint256, address)",
+      "function setMintLimits(uint256, uint256)",
+      "function setTransferLimits(uint256, uint256, uint256)",
+      "function forceBurn(address, uint256)",
+      "function withdrawProfit(address, uint256)",
+      "function rescueToken(address, address, uint256)"
+    ];
+
+    let provider, signer, contract;
+    let userAddress;
+    let networkName = '';
+
+    // DOM 元素
+    const btnConnect = document.getElementById('btn-connect');
+    const walletAddr = document.getElementById('wallet-address');
+    const contractAddrInput = document.getElementById('contract-address');
+    const btnLoadContract = document.getElementById('btn-load-contract');
+    const appContent = document.getElementById('app-content');
+    const networkBadge = document.getElementById('network-badge');
+    const pauseBadge = document.getElementById('pause-badge');
+
+    // 信息展示
+    const tokenName = document.getElementById('token-name');
+    const tokenSymbol = document.getElementById('token-symbol');
+    const userBalance = document.getElementById('user-balance');
+    const mintFeePct = document.getElementById('mint-fee-pct');
+    const redeemFeePct = document.getElementById('redeem-fee-pct');
+    const feeCollector = document.getElementById('fee-collector');
+    const contractBalance = document.getElementById('contract-balance');
+    const txStatus = document.getElementById('tx-status');
+
+    // 卡片显示控制
+    const mintCard = document.getElementById('mint-card');
+    const adminCard = document.getElementById('admin-card');
+    const feeLimitCard = document.getElementById('fee-limit-card');
+    const profitCard = document.getElementById('profit-card');
+    const rescueCard = document.getElementById('rescue-card');
+
+    // 按钮事件绑定
+    btnConnect.onclick = connectWallet;
+    btnLoadContract.onclick = loadContract;
+
+    document.getElementById('btn-mint').onclick = executeMint;
+    document.getElementById('btn-redeem').onclick = executeRedeem;
+    document.getElementById('btn-pause').onclick = () => setPause(true);
+    document.getElementById('btn-unpause').onclick = () => setPause(false);
+    document.getElementById('btn-blacklist-add').onclick = () => updateBlacklist(true);
+    document.getElementById('btn-blacklist-remove').onclick = () => updateBlacklist(false);
+    document.getElementById('btn-whitelist-add').onclick = () => updateWhitelist(true);
+    document.getElementById('btn-whitelist-remove').onclick = () => updateWhitelist(false);
+    document.getElementById('btn-force-burn').onclick = executeForceBurn;
+    document.getElementById('btn-set-fees').onclick = setFeeParams;
+    document.getElementById('btn-set-mint-limits').onclick = setMintLimits;
+    document.getElementById('btn-set-transfer-limits').onclick = setTransferLimits;
+    document.getElementById('btn-withdraw').onclick = withdrawProfit;
+    document.getElementById('btn-rescue').onclick = rescueToken;
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert('请安装 MetaMask');
+        return;
+      }
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        userAddress = accounts[0];
+        walletAddr.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        const network = await provider.getNetwork();
+        networkName = network.name === 'homestead' ? 'Ethereum' : (network.name || `Chain ID ${network.chainId}`);
+        networkBadge.textContent = `🌐 ${networkName}`;
+        btnConnect.disabled = true;
+        btnConnect.textContent = '已连接';
+        if (contract) await refreshAll();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadContract() {
+      const addr = contractAddrInput.value.trim();
+      if (!ethers.utils.isAddress(addr)) {
+        alert('请输入有效的合约地址');
+        return;
+      }
+      if (!signer) {
+        alert('请先连接钱包');
+        return;
+      }
+      contract = new ethers.Contract(addr, abi, signer);
+      appContent.classList.remove('hidden');
+      await refreshAll();
+    }
+
+    async function refreshAll() {
+      if (!contract) return;
+      try {
+        const [name, symbol, decimals, balance, mfp, rfp, collector, paused, conBal] = await Promise.all([
+          contract.name(),
+          contract.symbol(),
+          contract.decimals(),
+          contract.balanceOf(userAddress),
+          contract.mintFeePercent(),
+          contract.redeemFeePercent(),
+          contract.feeCollector(),
+          contract.paused(),
+          contract.balanceOf(contract.address)
+        ]);
+        tokenName.textContent = name;
+        tokenSymbol.textContent = symbol;
+        const fmt = ethers.utils.formatUnits(balance, decimals);
+        userBalance.textContent = `${fmt} ${symbol}`;
+        mintFeePct.textContent = `${mfp / 100}%`;
+        redeemFeePct.textContent = `${rfp / 100}%`;
+        feeCollector.textContent = `${collector.slice(0,6)}...${collector.slice(-4)}`;
+        contractBalance.textContent = `${ethers.utils.formatUnits(conBal, decimals)} ${symbol}`;
+        pauseBadge.textContent = paused ? '⏸️ 已暂停' : '▶️ 运行中';
+        pauseBadge.style.background = paused ? '#ef4444' : '#22c55e';
+
+        // 角色检查
+        const DEFAULT_ADMIN = await contract.DEFAULT_ADMIN_ROLE();
+        const MINTER = await contract.MINTER_ROLE();
+        const PAUSER = await contract.PAUSER_ROLE();
+        const FEE_SETTER = await contract.FEE_SETTER_ROLE();
+        const BLACKLIST_MGR = await contract.BLACKLIST_MANAGER_ROLE();
+        const FORCE_BURNER = await contract.FORCE_BURNER_ROLE();
+
+        const [isAdmin, isMinter, isPauser, isFeeSetter, isBlacklistMgr, isForceBurner] = await Promise.all([
+          contract.hasRole(DEFAULT_ADMIN, userAddress),
+          contract.hasRole(MINTER, userAddress),
+          contract.hasRole(PAUSER, userAddress),
+          contract.hasRole(FEE_SETTER, userAddress),
+          contract.hasRole(BLACKLIST_MGR, userAddress),
+          contract.hasRole(FORCE_BURNER, userAddress)
+        ]);
+
+        // 显示/隐藏卡片
+        mintCard.classList.toggle('hidden', !isMinter);
+        adminCard.classList.toggle('hidden', !(isAdmin || isPauser || isBlacklistMgr || isForceBurner));
+        feeLimitCard.classList.toggle('hidden', !(isAdmin || isFeeSetter));
+        profitCard.classList.toggle('hidden', !isFeeSetter);
+        rescueCard.classList.toggle('hidden', !isAdmin);
+
+        // 赎回费用提示
+        document.getElementById('redeem-fee-hint').textContent = `赎回手续费: ${rfp/100}%`;
+
+        // 填入当前限额（如果有权限）
+        if (isAdmin || isFeeSetter) {
+          document.getElementById('mint-fee-input').value = mfp;
+          document.getElementById('redeem-fee-input').value = rfp;
+          document.getElementById('fee-collector-input').value = collector;
+        }
+        if (isAdmin) {
+          const [maxMintTx, maxMintDay, cooldown, maxTx, maxDay] = await Promise.all([
+            contract.maxMintPerTx(), contract.maxMintPerDay(),
+            contract.transferCooldown(), contract.maxTransferPerTx(), contract.maxTransferPerDay()
+          ]);
+          document.getElementById('mint-limit-tx').value = maxMintTx.toString();
+          document.getElementById('mint-limit-day').value = maxMintDay.toString();
+          document.getElementById('transfer-cooldown').value = cooldown.toString();
+          document.getElementById('transfer-limit-tx').value = maxTx.toString();
+          document.getElementById('transfer-limit-day').value = maxDay.toString();
+        }
+      } catch (e) {
+        console.error(e);
+        txStatus.innerHTML = `<span class="error">加载出错: ${e.message}</span>`;
+      }
+    }
+
+    async function executeTx(txPromise, successMsg) {
+      txStatus.innerHTML = '⏳ 交易进行中...';
+      try {
+        const tx = await txPromise;
+        await tx.wait();
+        txStatus.innerHTML = `✅ ${successMsg}`;
+        await refreshAll();
+      } catch (e) {
+        txStatus.innerHTML = `<span class="error">❌ ${e.message}</span>`;
+      }
+    }
+
+    function executeMint() {
+      const to = document.getElementById('mint-to').value.trim();
+      const total = document.getElementById('mint-total').value;
+      if (!ethers.utils.isAddress(to)) return alert('目标地址无效');
+      if (!total || parseFloat(total) <= 0) return alert('金额必须 > 0');
+      executeTx(contract.mintWithFee(to, ethers.utils.parseUnits(total, 18)), '铸币成功');
+    }
+
+    function executeRedeem() {
+      const amount = document.getElementById('redeem-amount').value;
+      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
+      executeTx(contract.redeem(ethers.utils.parseUnits(amount, 18)), '赎回已提交');
+    }
+
+    function setPause(pause) {
+      executeTx(contract.setPause(pause), pause ? '已暂停' : '已恢复');
+    }
+
+    function updateBlacklist(status) {
+      const addr = document.getElementById('blacklist-addr').value.trim();
+      if (!ethers.utils.isAddress(addr)) return alert('地址无效');
+      executeTx(contract.setBlacklist([addr], status), status ? '已加入黑名单' : '已移出黑名单');
+    }
+
+    function updateWhitelist(status) {
+      const addr = document.getElementById('whitelist-addr').value.trim();
+      if (!ethers.utils.isAddress(addr)) return alert('地址无效');
+      executeTx(contract.setWhiteList(addr, status), status ? '已加入白名单' : '已移出白名单');
+    }
+
+    function executeForceBurn() {
+      const addr = document.getElementById('force-burn-addr').value.trim();
+      const amount = document.getElementById('force-burn-amount').value;
+      if (!ethers.utils.isAddress(addr)) return alert('地址无效');
+      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
+      executeTx(contract.forceBurn(addr, ethers.utils.parseUnits(amount, 18)), '强制销毁完成');
+    }
+
+    function setFeeParams() {
+      const mFee = document.getElementById('mint-fee-input').value;
+      const rFee = document.getElementById('redeem-fee-input').value;
+      const collector = document.getElementById('fee-collector-input').value.trim();
+      if (!ethers.utils.isAddress(collector)) return alert('收益地址无效');
+      if (mFee < 0 || rFee < 0 || mFee > 1000 || rFee > 1000) return alert('费率需在 0~1000 基点之间');
+      executeTx(contract.setFeeParams(mFee, rFee, collector), '费率已更新');
+    }
+
+    function setMintLimits() {
+      const txLimit = document.getElementById('mint-limit-tx').value || '0';
+      const dayLimit = document.getElementById('mint-limit-day').value || '0';
+      executeTx(contract.setMintLimits(txLimit, dayLimit), '铸币限额已更新');
+    }
+
+    function setTransferLimits() {
+      const cd = document.getElementById('transfer-cooldown').value || '0';
+      const txL = document.getElementById('transfer-limit-tx').value || '0';
+      const dayL = document.getElementById('transfer-limit-day').value || '0';
+      executeTx(contract.setTransferLimits(cd, txL, dayL), '转账限额已更新');
+    }
+
+    function withdrawProfit() {
+      const to = document.getElementById('withdraw-to').value.trim();
+      const amount = document.getElementById('withdraw-amount').value;
+      if (!ethers.utils.isAddress(to)) return alert('接收地址无效');
+      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
+      executeTx(contract.withdrawProfit(to, ethers.utils.parseUnits(amount, 18)), '收益提取成功');
+    }
+
+    function rescueToken() {
+      const token = document.getElementById('rescue-token').value.trim();
+      const to = document.getElementById('rescue-to').value.trim();
+      const amount = document.getElementById('rescue-amount').value;
+      if (!ethers.utils.isAddress(to)) return alert('接收地址无效');
+      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
+      const tokenAddr = token === '' ? ethers.constants.AddressZero : token;
+      executeTx(contract.rescueToken(tokenAddr, to, amount), '救援成功');
+    }
+
+    // 监听账户和网络变化
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+          userAddress = null;
+          walletAddr.textContent = '';
+          btnConnect.disabled = false;
+          btnConnect.textContent = '连接 MetaMask';
+          appContent.classList.add('hidden');
+        } else {
+          userAddress = accounts[0];
+          walletAddr.textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+          if (contract) refreshAll();
+        }
+      });
+      window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+  })();
+</script>
+</body>
+</html>
