@@ -27,7 +27,7 @@
       padding: 2rem 1rem;
     }
     .container {
-      max-width: 960px;
+      max-width: 1100px;
       width: 100%;
     }
     h1 {
@@ -81,7 +81,7 @@
     .btn-success { border-color: var(--success); color: var(--success); }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
     }
     .card {
@@ -124,6 +124,10 @@
     .error {
       color: var(--danger);
       font-size: 0.85rem;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
     }
   </style>
 </head>
@@ -170,8 +174,9 @@
         <h2>💰 增发（带手续费）</h2>
         <div class="flex-col">
           <input type="text" id="mint-to" placeholder="目标地址" />
-          <input type="number" id="mint-total" placeholder="总金额（含手续费）" min="1" step="any" />
+          <input type="number" id="mint-total" placeholder="总金额（含手续费）" min="0" step="any" />
           <button id="btn-mint">执行铸币</button>
+          <span class="hint">净到账 = 总金额 - 手续费</span>
         </div>
       </div>
 
@@ -179,13 +184,13 @@
       <div class="card">
         <h2>📤 用户赎回</h2>
         <div class="flex-col">
-          <input type="number" id="redeem-amount" placeholder="赎回数量" min="1" step="any" />
+          <input type="number" id="redeem-amount" placeholder="赎回数量" min="0" step="any" />
           <button id="btn-redeem">赎回</button>
-          <span id="redeem-fee-hint" style="font-size:0.8rem; color: var(--text-secondary);"></span>
+          <span id="redeem-fee-hint" class="hint"></span>
         </div>
       </div>
 
-      <!-- 管理员卡片（仅DEFAULT_ADMIN/FEE_SETTER/PAUSER等） -->
+      <!-- 管理员卡片（暂停/黑名单/白名单/强制销毁） -->
       <div id="admin-card" class="card hidden">
         <h2>⚙️ 管理员控制</h2>
         <div class="flex-col">
@@ -215,7 +220,7 @@
           <div class="flex-col">
             <label>强制销毁</label>
             <input type="text" id="force-burn-addr" placeholder="目标地址" />
-            <input type="number" id="force-burn-amount" placeholder="数量" min="1" step="any" />
+            <input type="number" id="force-burn-amount" placeholder="数量" min="0" step="any" />
             <button id="btn-force-burn" class="btn-danger">执行销毁</button>
           </div>
         </div>
@@ -227,11 +232,11 @@
         <div class="flex-col">
           <div class="flex-col">
             <label>入金费率（基点）</label>
-            <input type="number" id="mint-fee-input" placeholder="例如 50 表示 0.5%" />
+            <input type="number" id="mint-fee-input" placeholder="例如 50 表示 0.5%" min="0" max="1000" />
           </div>
           <div class="flex-col">
             <label>出金费率（基点）</label>
-            <input type="number" id="redeem-fee-input" placeholder="例如 30" />
+            <input type="number" id="redeem-fee-input" placeholder="例如 30" min="0" max="1000" />
           </div>
           <div class="flex-col">
             <label>收益地址</label>
@@ -241,25 +246,25 @@
 
           <div class="flex-col" style="margin-top:1rem;">
             <label>铸币限额（每笔）</label>
-            <input type="number" id="mint-limit-tx" placeholder="0 = 无限制" />
+            <input type="number" id="mint-limit-tx" placeholder="0 = 无限制" min="0" />
           </div>
           <div class="flex-col">
             <label>铸币限额（每日）</label>
-            <input type="number" id="mint-limit-day" placeholder="0 = 无限制" />
+            <input type="number" id="mint-limit-day" placeholder="0 = 无限制" min="0" />
           </div>
           <button id="btn-set-mint-limits">更新铸币限额</button>
 
           <div class="flex-col" style="margin-top:1rem;">
             <label>转账冷却（秒）</label>
-            <input type="number" id="transfer-cooldown" placeholder="0 = 关闭" />
+            <input type="number" id="transfer-cooldown" placeholder="0 = 关闭" min="0" />
           </div>
           <div class="flex-col">
             <label>转账每笔上限</label>
-            <input type="number" id="transfer-limit-tx" placeholder="0 = 无限制" />
+            <input type="number" id="transfer-limit-tx" placeholder="0 = 无限制" min="0" />
           </div>
           <div class="flex-col">
             <label>转账每日上限</label>
-            <input type="number" id="transfer-limit-day" placeholder="0 = 无限制" />
+            <input type="number" id="transfer-limit-day" placeholder="0 = 无限制" min="0" />
           </div>
           <button id="btn-set-transfer-limits">更新转账限额</button>
         </div>
@@ -271,7 +276,7 @@
         <div class="flex-col">
           <div class="info"><span>合约中代币</span><span id="contract-balance">--</span></div>
           <input type="text" id="withdraw-to" placeholder="接收地址" />
-          <input type="number" id="withdraw-amount" placeholder="数量" step="any" />
+          <input type="number" id="withdraw-amount" placeholder="数量" min="0" step="any" />
           <button id="btn-withdraw">提取</button>
         </div>
       </div>
@@ -282,18 +287,39 @@
         <div class="flex-col">
           <input type="text" id="rescue-token" placeholder="代币地址 (空为ETH)" />
           <input type="text" id="rescue-to" placeholder="接收地址" />
-          <input type="number" id="rescue-amount" placeholder="数量 (wei单位)" step="any" />
+          <input type="number" id="rescue-amount" placeholder="数量 (ETH/代币最小单位)" min="0" step="any" />
           <button id="btn-rescue" class="btn-danger">执行救援</button>
         </div>
       </div>
+
+      <!-- 角色管理（仅超级管理员可见） -->
+      <div id="role-card" class="card hidden">
+        <h2>👥 角色管理</h2>
+        <div class="flex-col">
+          <label>角色</label>
+          <select id="role-select">
+            <option value="MINTER_ROLE">铸币者 (MINTER)</option>
+            <option value="PAUSER_ROLE">暂停者 (PAUSER)</option>
+            <option value="FEE_SETTER_ROLE">费率设置者</option>
+            <option value="BLACKLIST_MANAGER_ROLE">黑名单管理</option>
+            <option value="FORCE_BURNER_ROLE">强制销毁者</option>
+          </select>
+          <input type="text" id="role-account" placeholder="目标地址" />
+          <div style="display:flex; gap:0.5rem;">
+            <button id="btn-grant-role" class="btn-success">授予</button>
+            <button id="btn-revoke-role" class="btn-danger">撤销</button>
+          </div>
+        </div>
+      </div>
     </div>
+
     <div id="tx-status" class="row" style="margin-top:1rem;"></div>
   </div>
 </div>
 
 <script>
   (function() {
-    // ---------- ABI 片段 ----------
+    // ---------- ABI 片段（包含角色管理）----------
     const abi = [
       "function name() view returns (string)",
       "function symbol() view returns (string)",
@@ -327,7 +353,10 @@
       "function setTransferLimits(uint256, uint256, uint256)",
       "function forceBurn(address, uint256)",
       "function withdrawProfit(address, uint256)",
-      "function rescueToken(address, address, uint256)"
+      "function rescueToken(address, address, uint256)",
+      "function grantRole(bytes32, address)",
+      "function revokeRole(bytes32, address)",
+      "function getRoleAdmin(bytes32) view returns (bytes32)"
     ];
 
     let provider, signer, contract;
@@ -342,6 +371,7 @@
     const appContent = document.getElementById('app-content');
     const networkBadge = document.getElementById('network-badge');
     const pauseBadge = document.getElementById('pause-badge');
+    const txStatus = document.getElementById('tx-status');
 
     // 信息展示
     const tokenName = document.getElementById('token-name');
@@ -351,7 +381,6 @@
     const redeemFeePct = document.getElementById('redeem-fee-pct');
     const feeCollector = document.getElementById('fee-collector');
     const contractBalance = document.getElementById('contract-balance');
-    const txStatus = document.getElementById('tx-status');
 
     // 卡片显示控制
     const mintCard = document.getElementById('mint-card');
@@ -359,8 +388,9 @@
     const feeLimitCard = document.getElementById('fee-limit-card');
     const profitCard = document.getElementById('profit-card');
     const rescueCard = document.getElementById('rescue-card');
+    const roleCard = document.getElementById('role-card');
 
-    // 按钮事件绑定
+    // 按钮事件
     btnConnect.onclick = connectWallet;
     btnLoadContract.onclick = loadContract;
 
@@ -378,7 +408,10 @@
     document.getElementById('btn-set-transfer-limits').onclick = setTransferLimits;
     document.getElementById('btn-withdraw').onclick = withdrawProfit;
     document.getElementById('btn-rescue').onclick = rescueToken;
+    document.getElementById('btn-grant-role').onclick = grantRole;
+    document.getElementById('btn-revoke-role').onclick = revokeRole;
 
+    // ---------- 钱包连接 ----------
     async function connectWallet() {
       if (!window.ethereum) {
         alert('请安装 MetaMask');
@@ -401,6 +434,7 @@
       }
     }
 
+    // ---------- 加载合约 ----------
     async function loadContract() {
       const addr = contractAddrInput.value.trim();
       if (!ethers.utils.isAddress(addr)) {
@@ -416,6 +450,7 @@
       await refreshAll();
     }
 
+    // ---------- 刷新所有信息 ----------
     async function refreshAll() {
       if (!contract) return;
       try {
@@ -430,6 +465,7 @@
           contract.paused(),
           contract.balanceOf(contract.address)
         ]);
+
         tokenName.textContent = name;
         tokenSymbol.textContent = symbol;
         const fmt = ethers.utils.formatUnits(balance, decimals);
@@ -441,7 +477,7 @@
         pauseBadge.textContent = paused ? '⏸️ 已暂停' : '▶️ 运行中';
         pauseBadge.style.background = paused ? '#ef4444' : '#22c55e';
 
-        // 角色检查
+        // 角色哈希
         const DEFAULT_ADMIN = await contract.DEFAULT_ADMIN_ROLE();
         const MINTER = await contract.MINTER_ROLE();
         const PAUSER = await contract.PAUSER_ROLE();
@@ -458,17 +494,17 @@
           contract.hasRole(FORCE_BURNER, userAddress)
         ]);
 
-        // 显示/隐藏卡片
+        // 显示/隐藏功能卡片
         mintCard.classList.toggle('hidden', !isMinter);
         adminCard.classList.toggle('hidden', !(isAdmin || isPauser || isBlacklistMgr || isForceBurner));
         feeLimitCard.classList.toggle('hidden', !(isAdmin || isFeeSetter));
         profitCard.classList.toggle('hidden', !isFeeSetter);
         rescueCard.classList.toggle('hidden', !isAdmin);
+        roleCard.classList.toggle('hidden', !isAdmin);
 
-        // 赎回费用提示
         document.getElementById('redeem-fee-hint').textContent = `赎回手续费: ${rfp/100}%`;
 
-        // 填入当前限额（如果有权限）
+        // 预填当前费率/限额
         if (isAdmin || isFeeSetter) {
           document.getElementById('mint-fee-input').value = mfp;
           document.getElementById('redeem-fee-input').value = rfp;
@@ -491,6 +527,7 @@
       }
     }
 
+    // ---------- 通用交易执行 ----------
     async function executeTx(txPromise, successMsg) {
       txStatus.innerHTML = '⏳ 交易进行中...';
       try {
@@ -503,85 +540,124 @@
       }
     }
 
+    // ---------- 增发 ----------
     function executeMint() {
       const to = document.getElementById('mint-to').value.trim();
-      const total = document.getElementById('mint-total').value;
+      const totalRaw = document.getElementById('mint-total').value.trim();
       if (!ethers.utils.isAddress(to)) return alert('目标地址无效');
-      if (!total || parseFloat(total) <= 0) return alert('金额必须 > 0');
-      executeTx(contract.mintWithFee(to, ethers.utils.parseUnits(total, 18)), '铸币成功');
+      if (!totalRaw || isNaN(parseFloat(totalRaw)) || parseFloat(totalRaw) <= 0) return alert('金额必须 > 0');
+      const amount = ethers.utils.parseUnits(totalRaw, 18);
+      executeTx(contract.mintWithFee(to, amount), '铸币成功');
     }
 
+    // ---------- 赎回 ----------
     function executeRedeem() {
-      const amount = document.getElementById('redeem-amount').value;
-      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
-      executeTx(contract.redeem(ethers.utils.parseUnits(amount, 18)), '赎回已提交');
+      const amountRaw = document.getElementById('redeem-amount').value.trim();
+      if (!amountRaw || isNaN(parseFloat(amountRaw)) || parseFloat(amountRaw) <= 0) return alert('金额必须 > 0');
+      const amount = ethers.utils.parseUnits(amountRaw, 18);
+      executeTx(contract.redeem(amount), '赎回已提交（链下处理）');
     }
 
+    // ---------- 暂停/恢复 ----------
     function setPause(pause) {
       executeTx(contract.setPause(pause), pause ? '已暂停' : '已恢复');
     }
 
+    // ---------- 黑名单 ----------
     function updateBlacklist(status) {
       const addr = document.getElementById('blacklist-addr').value.trim();
       if (!ethers.utils.isAddress(addr)) return alert('地址无效');
       executeTx(contract.setBlacklist([addr], status), status ? '已加入黑名单' : '已移出黑名单');
     }
 
+    // ---------- 白名单 ----------
     function updateWhitelist(status) {
       const addr = document.getElementById('whitelist-addr').value.trim();
       if (!ethers.utils.isAddress(addr)) return alert('地址无效');
       executeTx(contract.setWhiteList(addr, status), status ? '已加入白名单' : '已移出白名单');
     }
 
+    // ---------- 强制销毁 ----------
     function executeForceBurn() {
       const addr = document.getElementById('force-burn-addr').value.trim();
-      const amount = document.getElementById('force-burn-amount').value;
+      const amountRaw = document.getElementById('force-burn-amount').value.trim();
       if (!ethers.utils.isAddress(addr)) return alert('地址无效');
-      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
-      executeTx(contract.forceBurn(addr, ethers.utils.parseUnits(amount, 18)), '强制销毁完成');
+      if (!amountRaw || isNaN(parseFloat(amountRaw)) || parseFloat(amountRaw) <= 0) return alert('金额必须 > 0');
+      const amount = ethers.utils.parseUnits(amountRaw, 18);
+      executeTx(contract.forceBurn(addr, amount), '强制销毁完成');
     }
 
+    // ---------- 设置费率 ----------
     function setFeeParams() {
-      const mFee = document.getElementById('mint-fee-input').value;
-      const rFee = document.getElementById('redeem-fee-input').value;
+      const mFeeRaw = document.getElementById('mint-fee-input').value.trim();
+      const rFeeRaw = document.getElementById('redeem-fee-input').value.trim();
       const collector = document.getElementById('fee-collector-input').value.trim();
+      if (!mFeeRaw || !rFeeRaw || !collector) return alert('请完整填写费率与地址');
+      const mFee = parseInt(mFeeRaw, 10);
+      const rFee = parseInt(rFeeRaw, 10);
+      if (isNaN(mFee) || isNaN(rFee) || mFee < 0 || mFee > 1000 || rFee < 0 || rFee > 1000)
+        return alert('费率需为 0~1000 的整数');
       if (!ethers.utils.isAddress(collector)) return alert('收益地址无效');
-      if (mFee < 0 || rFee < 0 || mFee > 1000 || rFee > 1000) return alert('费率需在 0~1000 基点之间');
       executeTx(contract.setFeeParams(mFee, rFee, collector), '费率已更新');
     }
 
+    // ---------- 铸币限额 ----------
     function setMintLimits() {
-      const txLimit = document.getElementById('mint-limit-tx').value || '0';
-      const dayLimit = document.getElementById('mint-limit-day').value || '0';
-      executeTx(contract.setMintLimits(txLimit, dayLimit), '铸币限额已更新');
+      const txL = document.getElementById('mint-limit-tx').value.trim() || '0';
+      const dayL = document.getElementById('mint-limit-day').value.trim() || '0';
+      if (isNaN(parseInt(txL)) || isNaN(parseInt(dayL))) return alert('限额必须为整数');
+      executeTx(contract.setMintLimits(txL, dayL), '铸币限额已更新');
     }
 
+    // ---------- 转账限额 ----------
     function setTransferLimits() {
-      const cd = document.getElementById('transfer-cooldown').value || '0';
-      const txL = document.getElementById('transfer-limit-tx').value || '0';
-      const dayL = document.getElementById('transfer-limit-day').value || '0';
+      const cd = document.getElementById('transfer-cooldown').value.trim() || '0';
+      const txL = document.getElementById('transfer-limit-tx').value.trim() || '0';
+      const dayL = document.getElementById('transfer-limit-day').value.trim() || '0';
+      if (isNaN(parseInt(cd)) || isNaN(parseInt(txL)) || isNaN(parseInt(dayL)))
+        return alert('冷却与限额必须为整数');
       executeTx(contract.setTransferLimits(cd, txL, dayL), '转账限额已更新');
     }
 
+    // ---------- 提取收益 ----------
     function withdrawProfit() {
       const to = document.getElementById('withdraw-to').value.trim();
-      const amount = document.getElementById('withdraw-amount').value;
+      const amountRaw = document.getElementById('withdraw-amount').value.trim();
       if (!ethers.utils.isAddress(to)) return alert('接收地址无效');
-      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
-      executeTx(contract.withdrawProfit(to, ethers.utils.parseUnits(amount, 18)), '收益提取成功');
+      if (!amountRaw || isNaN(parseFloat(amountRaw)) || parseFloat(amountRaw) <= 0) return alert('金额必须 > 0');
+      const amount = ethers.utils.parseUnits(amountRaw, 18);
+      executeTx(contract.withdrawProfit(to, amount), '收益提取成功');
     }
 
+    // ---------- 紧急救援 ----------
     function rescueToken() {
       const token = document.getElementById('rescue-token').value.trim();
       const to = document.getElementById('rescue-to').value.trim();
-      const amount = document.getElementById('rescue-amount').value;
+      const amountRaw = document.getElementById('rescue-amount').value.trim();
       if (!ethers.utils.isAddress(to)) return alert('接收地址无效');
-      if (!amount || parseFloat(amount) <= 0) return alert('金额必须 > 0');
+      if (!amountRaw || isNaN(parseFloat(amountRaw)) || parseFloat(amountRaw) <= 0) return alert('金额必须 > 0');
       const tokenAddr = token === '' ? ethers.constants.AddressZero : token;
-      executeTx(contract.rescueToken(tokenAddr, to, amount), '救援成功');
+      executeTx(contract.rescueToken(tokenAddr, to, amountRaw), '救援成功');
     }
 
-    // 监听账户和网络变化
+    // ---------- 角色管理 ----------
+    async function grantRole() {
+      const roleName = document.getElementById('role-select').value;
+      const account = document.getElementById('role-account').value.trim();
+      if (!ethers.utils.isAddress(account)) return alert('地址无效');
+      const roleHash = ethers.utils.id(roleName);
+      executeTx(contract.grantRole(roleHash, account), `已授予 ${roleName}`);
+    }
+
+    async function revokeRole() {
+      const roleName = document.getElementById('role-select').value;
+      const account = document.getElementById('role-account').value.trim();
+      if (!ethers.utils.isAddress(account)) return alert('地址无效');
+      const roleHash = ethers.utils.id(roleName);
+      executeTx(contract.revokeRole(roleHash, account), `已撤销 ${roleName}`);
+    }
+
+    // ---------- 监听钱包事件 ----------
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length === 0) {
